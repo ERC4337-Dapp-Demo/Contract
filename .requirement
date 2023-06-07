@@ -1,0 +1,14 @@
+- Marketplace:
+  - Can mint erc721
+  - Can mint erc1155
+  - Can exchange erc721 and erc1155
+  - Have our own  token
+  - Can buy token buy our token or different token such as USDT, DAI, BSC
+- Collection: 
+  - Not shown in smart contract
+  - Instead we will have store of our nft table and our collection table
+  - If we exchange nft in 1 collection on our Market actually we just exchange it id Instead
+- Others nft (Have to implement erc721 standard):
+  - Each time we public an nft from other contract we will mint new nft in our contract and pass ipfs info to this new nft
+  - When we accept offer or buy, nft to transfer to new owner and also transfer nft of our contract to new owner
+- Others erc1155 (Have to implement erc1155 standard): same as nft
