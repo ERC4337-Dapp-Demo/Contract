@@ -16,7 +16,12 @@ require("hardhat-gas-reporter");
 
 const fs = require("fs");
 
-const { metamaskKey, bscTestnet } = require("./secrets");
+const {
+  metamaskKey,
+  bscTestnet,
+  ethTestnet,
+  INFURA_KEY,
+} = require("./secrets");
 
 function getRemappings() {
   return fs
@@ -28,15 +33,11 @@ function getRemappings() {
 
 module.exports = {
   solidity: {
-    version: "0.8.17",
+    version: "0.8.13",
     settings: {
-      viaIR: false,
       optimizer: {
         enabled: true,
         runs: 200,
-      },
-      metadata: {
-        bytecodeHash: "none",
       },
     },
   },
@@ -53,29 +54,15 @@ module.exports = {
       allowUnlimitedContractSize: true,
     },
     testnet: {
-      url: "https://nd-270-779-982.p2pify.com/a48b087a119bd81960385840aca53250",
-      chainId: 97,
+      url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
+      chainId: 5,
       accounts: [metamaskKey],
-      allowUnlimitedContractSize: true,
-      gas: 2100000,
-      gasPrice: 16000000000,
+      gas: 3000000,
+      gasPrice: 3000000000,
     },
-    mainnet: {
-      url: "https://bsc-dataseed1.ninicoin.io",
-      chainID: 56,
-      accounts: [metamaskKey],
-      allowUnlimitedContractSize: true,
-    },
-  },
-  settings: {
-    remappings: ["ERC721A/=lib/ERC721A/contracts/"],
-  },
-  gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
-    currency: "USD",
   },
   etherscan: {
-    apiKey: bscTestnet,
+    apiKey: ethTestnet,
   },
   preprocess: {
     eachLine: (hre) => ({
@@ -90,10 +77,5 @@ module.exports = {
         return line;
       },
     }),
-  },
-  gasReporter: {
-    currency: "CHF",
-    gasPrice: 21,
-    enabled: true,
   },
 };

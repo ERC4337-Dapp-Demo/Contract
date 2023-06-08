@@ -4,17 +4,10 @@ pragma solidity ^0.8.0;
 /**
   @dev use for setting all currencies that we use
  */
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interfaces/ICurrency.sol";
 
-contract Currency is
-    Initializable,
-    OwnableUpgradeable,
-    UUPSUpgradeable,
-    ICurrency
-{
+contract Currency is Ownable, ICurrency {
     address[] public currencies;
     mapping(address => bool) public override(ICurrency) currencyState; // false is locked
 
@@ -23,19 +16,7 @@ contract Currency is
 
     mapping(address => bool) public currencyExists;
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
-
-    function initialize() public initializer {
-        __Ownable_init();
-        __UUPSUpgradeable_init();
-    }
-
-    function _authorizeUpgrade(
-        address newImplementation
-    ) internal override onlyOwner {}
+    constructor() {}
 
     function addCurrency(
         address _contractERC20,

@@ -1,4 +1,8 @@
 const metamaskKey = "";
 
+const INFURA_KEY = "";
+
 const bscTestnet = "";
-module.exports = { metamaskKey, bscTestnet };
+const ethTestnet = "";
+
+module.exports = { metamaskKey, bscTestnet, ethTestnet, INFURA_KEY };

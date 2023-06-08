@@ -1,52 +1,51 @@
 const hre = require("hardhat");
 
-const OWNER_ADDRESS = "0xe42B1F6BE2DDb834615943F2b41242B172788E7E";
-const FIXED_DAI_ADDRESS_ERC20 = "0xd555d9CF3fd5F0C5F806EF7B5D9236E04CF938EA";
-
 async function main() {
   let data = {};
-
+  console.log("DEPLOYING...");
   const Marketplace = await hre.ethers.getContractFactory("Marketplace");
-  const marketplaceProxy = await upgrades.deployProxy(Marketplace, [], {
-    kind: "uups",
-  });
+  const marketplaceProxy = await Marketplace.deploy();
+  const marketplace = await marketplaceProxy.deployed();
+
+  console.log("Go for market", marketplace.address);
 
   const Currency = await hre.ethers.getContractFactory("Currency");
-  const currencyProxy = await upgrades.deployProxy(Currency, [], {
-    kind: "uups",
-  });
+  const currencyProxy = await Currency.deploy();
+  const currency = await currencyProxy.deployed();
+
+  console.log("Go for currency", currencyProxy.address);
 
   let tx;
 
   // Marketplace setting
-  tx = await marketplaceProxy.setCurrencyAddress(currencyProxy.address);
+  tx = await marketplace.setCurrencyAddress(currency.address);
   await tx.wait();
-  tx = await marketplaceProxy.setTreasuryAddress(treasuryProxy.address);
+  tx = await marketplace.setTreasuryAddress(
+    "0x0deB52499C2e9F3921c631cb6Ad3522C576d5484"
+  );
   await tx.wait();
 
   // CURRENCY setting
-  if (FIXED_DAI_ADDRESS_ERC20) {
-    tx = await currencyProxy.addCurrency(
-      "0xd555d9CF3fd5F0C5F806EF7B5D9236E04CF938EA",
-      "https://imgs.search.brave.com/Aq8sa18AW9rN3NN2eCKDW8ZdYy5cGDJSbgR1SehCqk4/rs:fit:1024:1024:1/g:ce/aHR0cHM6Ly9ibG9j/a29ub21pLTlmY2Qu/a3hjZG4uY29tL3dw/LWNvbnRlbnQvdXBs/b2Fkcy8yMDE5LzEw/L2Jsb2Nrb25vbWkt/ZGFpLXJlYnJhbmQt/MTAyNHgxMDI0LnBu/Zw"
-    ); // DAI ADDRESS
-    await tx.wait();
-  }
+  tx = await currency.addCurrency(
+    "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+    ""
+  );
+  await tx.wait();
 
-  tx = await currencyProxy.addCurrency(
+  tx = await currency.addCurrency(
     "0x0000000000000000000000000000000000000000",
-    "https://cdn.iconscout.com/icon/premium/png-512-thumb/binance-coin-bnb-7266775-5978349.png?f=avif&w=256"
-  ); // DAI ADDRESS
+    ""
+  );
   await tx.wait();
 
   data.marketplace = {
-    address: marketplaceProxy.address,
-    hash: marketplaceProxy.deployTransaction.hash,
+    address: marketplace.address,
+    hash: marketplace.deployTransaction.hash,
     arguments: [],
   };
   data.currency = {
-    address: currencyProxy.address,
-    hash: currencyProxy.deployTransaction.hash,
+    address: currency.address,
+    hash: currency.deployTransaction.hash,
     arguments: [],
   };
 
@@ -62,6 +61,7 @@ async function main() {
     } ${contract.arguments.join(" ")}; `;
   });
   console.log(verifyCommand);
+  console.log("DEPLOYED!");
 }
 
 main()
@@ -70,3 +70,16 @@ main()
     console.error(error);
     process.exit(1);
   });
+
+// Data {
+//   marketplace: {
+//     address: '0x06c74Bc76bc5176B5e1D6295dc2fc7fB2fA298D0',
+//     hash: '0xd48a5d4f3accb234acb7be7333b4cea080f785c2fc7948df3f302485e9f78d97',
+//     arguments: []
+//   },
+//   currency: {
+//     address: '0x0b0cA8f3E5ca785938F4cFBD1C419BBa24bF521d',
+//     hash: '0x8d6d8bebe8d8e8ceedbf7261ba81bb0df5ca4bccaa58bec2265ea9ee44aed960',
+//     arguments: []
+//   }
+// }

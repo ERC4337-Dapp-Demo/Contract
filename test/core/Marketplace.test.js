@@ -32,13 +32,9 @@ describe("Marketplace", () => {
 
     // UPGRADEABLE DEPLOY
     let currencyFactory = await ethers.getContractFactory("Currency");
-    currencyProxyContract = await upgrades.deployProxy(currencyFactory, [], {
-      kind: "uups",
-    });
+    currencyProxyContract = await currencyFactory.deploy();
     let marketFactory = await ethers.getContractFactory("Marketplace");
-    marketProxyContract = await upgrades.deployProxy(marketFactory, [], {
-      kind: "uups",
-    });
+    marketProxyContract = await marketFactory.deploy();
 
     let tx;
 

@@ -1,28 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interfaces/IMarketplace.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155ReceiverUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol";
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "../interfaces/ICurrency.sol";
 
 contract Marketplace is
-    Initializable,
-    OwnableUpgradeable,
-    UUPSUpgradeable,
+    Ownable,
     IMarketplace,
-    ReentrancyGuardUpgradeable,
-    ERC721HolderUpgradeable,
-    ERC1155ReceiverUpgradeable,
-    ERC1155HolderUpgradeable
+    ReentrancyGuard,
+    ERC721Holder,
+    ERC1155Receiver,
+    ERC1155Holder
 {
     uint256 public FEE_PER_ITEM; // 10%
     uint256 public MAX_PERCENTAGE;
@@ -103,9 +99,10 @@ contract Marketplace is
         uint256 price
     );
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        _disableInitializers();
+        treasuryAddress = _msgSender();
+        FEE_PER_ITEM = 300; // 3%
+        MAX_PERCENTAGE = 10000;
     }
 
     fallback() external payable {}
@@ -270,20 +267,28 @@ contract Marketplace is
                 "Marketplace: can not transfer to treasury"
             );
         } else {
-            uint256 allowance = IERC20Upgradeable(myItem.contractERC20)
-                .allowance(_msgSender(), address(this));
+            uint256 allowance = IERC20(myItem.contractERC20).allowance(
+                _msgSender(),
+                address(this)
+            );
             require(
                 allowance >= minAllowance,
                 "Marketplace: Not enough allowance"
             );
             // transfer 90% to owner
-            bool successOwner = IERC20Upgradeable(myItem.contractERC20)
-                .transferFrom(_msgSender(), myItem.owner, ownerAmount);
+            bool successOwner = IERC20(myItem.contractERC20).transferFrom(
+                _msgSender(),
+                myItem.owner,
+                ownerAmount
+            );
             require(successOwner, "Marketplace: can not transfer to owner");
 
             // Transfer 10% to treasury address
-            bool successTreasury = IERC20Upgradeable(myItem.contractERC20)
-                .transferFrom(_msgSender(), treasuryAddress, treasuryAmount);
+            bool successTreasury = IERC20(myItem.contractERC20).transferFrom(
+                _msgSender(),
+                treasuryAddress,
+                treasuryAmount
+            );
             require(
                 successTreasury,
                 "Marketplace: can not transfer to treasury"
@@ -323,18 +328,6 @@ contract Marketplace is
         }
     }
 
-    function initialize() public initializer {
-        __Ownable_init();
-        treasuryAddress = _msgSender();
-        FEE_PER_ITEM = 300; // 3%
-        MAX_PERCENTAGE = 10000;
-        __UUPSUpgradeable_init();
-        __ReentrancyGuard_init();
-        __ERC1155Holder_init();
-        __ERC1155Receiver_init();
-        __ERC721Holder_init();
-    }
-
     function getItemStoreLength(
         address _contractNFT,
         uint256 _tokenId
@@ -356,10 +349,6 @@ contract Marketplace is
         }
     }
 
-    function _authorizeUpgrade(
-        address newImplementation
-    ) internal override onlyOwner {}
-
     function _listItem(
         address _contractNFT,
         uint256 _tokenId,
@@ -372,7 +361,7 @@ contract Marketplace is
             "Marketplace: Unallow token address"
         );
         require(
-            IERC721Upgradeable(_contractNFT).ownerOf(_tokenId) == _msgSender(),
+            IERC721(_contractNFT).ownerOf(_tokenId) == _msgSender(),
             "Marketplace: You are not owner of tokenId"
         );
 
@@ -425,10 +414,7 @@ contract Marketplace is
             "Marketplace: Unallow token address"
         );
         require(
-            IERC1155Upgradeable(_contractNFT).balanceOf(
-                _msgSender(),
-                _tokenId
-            ) >= _amount,
+            IERC1155(_contractNFT).balanceOf(_msgSender(), _tokenId) >= _amount,
             "Marketplace: You don't have enough tokenId"
         );
 
@@ -482,11 +468,7 @@ contract Marketplace is
         address _sender,
         address _recipient
     ) private {
-        IERC721Upgradeable(_contractNFT).transferFrom(
-            _sender,
-            _recipient,
-            _tokenId
-        );
+        IERC721(_contractNFT).transferFrom(_sender, _recipient, _tokenId);
     }
 
     function _transferERC1155(
@@ -496,7 +478,7 @@ contract Marketplace is
         address _sender,
         address _recipient
     ) private {
-        IERC1155Upgradeable(_contractNFT).safeTransferFrom(
+        IERC1155(_contractNFT).safeTransferFrom(
             _sender,
             _recipient,
             _tokenId,
@@ -507,15 +489,11 @@ contract Marketplace is
 
     function _is721(address _contractNFT) private view returns (bool) {
         return
-            IERC165Upgradeable(_contractNFT).supportsInterface(
-                type(IERC721Upgradeable).interfaceId
-            );
+            IERC165(_contractNFT).supportsInterface(type(IERC721).interfaceId);
     }
 
     function _is1155(address _contractNFT) private view returns (bool) {
         return
-            IERC165Upgradeable(_contractNFT).supportsInterface(
-                type(IERC1155Upgradeable).interfaceId
-            );
+            IERC165(_contractNFT).supportsInterface(type(IERC1155).interfaceId);
     }
 }

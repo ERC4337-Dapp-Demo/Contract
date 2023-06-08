@@ -11,9 +11,7 @@ describe("Currency Testing", () => {
   beforeEach(async () => {
     [owner, addr1, ...addrs] = await ethers.getSigners();
     let currencyProxy = await ethers.getContractFactory("Currency");
-    currencyProxyContract = await upgrades.deployProxy(currencyProxy, [], {
-      kind: "uups",
-    });
+    currencyProxyContract = await currencyProxy.deploy();
     let daiFMock = await ethers.getContractFactory("Dai");
     daiMock = await daiFMock.deploy();
   });
